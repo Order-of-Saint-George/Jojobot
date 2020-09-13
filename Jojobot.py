@@ -151,8 +151,8 @@ async def on_message(message):
         
 @client.event
 async def on_member_join(member):
-        print ('New member on server {0}'.format(member.server.id))
-        if (member != client.user) & (member.server.id == mainChannel):
+        print ('New member on server {0}'.format(member.guild.id))
+        if (member != client.user) & (member.guild.id == mainChannel):
                 msg = 'Hello {0.mention}, welcome to the Order of St. George! We hope you enjoy your flight!'.format(member)
                 await client.get_channel(mainChannel).send(msg)
                 return
