@@ -164,7 +164,7 @@ async def on_ready():
         for server in client.guilds:
                 print ("Connected to server: {}".format(server))
         print('------')
-	await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Jojo"))
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Jojo"))
 
 
 while True:
