@@ -1,9 +1,11 @@
-import discord,asyncio
+import discord
 import time
 import re
 import random
-import math
 import json
+from discord.ext import commands
+from discord.message import PartialMessage
+from discord_slash import SlashCommand, SlashContext, utils
 
 with open('settings.json') as f:
 	settings = json.load(f)
@@ -16,7 +18,11 @@ if(TOKEN == "TOKEN" or mainChannel == 0):
         time.sleep(5)
         exit()
 
-client = discord.Client()
+
+
+#client = discord.Client()
+client 	= commands.Bot(command_prefix="!", intents = discord.Intents.all())
+slash 	= SlashCommand(client, sync_commands=True)
 
 @client.event
 async def on_message(message):
@@ -30,15 +36,15 @@ async def on_message(message):
                 await message.channel.send(msg)
                 return
                 
-##      whitespace splitting: !say channelID message
-##      if (message.channel.id == '<CHANNEL ID>') & message.content.startswith('!say'):
-##                data = message.content.split()
-##                msg = ''
-##                for temp in data[2:]:
-##                        msg = msg + temp + ' '
-##                print ('Echoing message: channel {0}, message {1}'.format(data[1], msg))
-##                await client.send_message(client.get_channel(data[1]), msg)
-##                return
+        ##whitespace splitting: !say channelID message
+        ##if (message.channel.id == '<CHANNEL ID>') & message.content.startswith('!say'):
+        ##          data = message.content.split()
+        ##          msg = ''
+        ##          for temp in data[2:]:
+        ##                  msg = msg + temp + ' '
+        ##          print ('Echoing message: channel {0}, message {1}'.format(data[1], msg))
+        ##          await client.send_message(client.get_channel(data[1]), msg)
+        ##          return
 
         if message.content.startswith('!roll'):
                 #need to split out verbose mode
@@ -166,16 +172,64 @@ async def on_ready():
         print('------')
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Jojo"))
 
+options = [
+        {
+                "name"          : "dice",
+                "description"   : "Please use the format XdY+Z, XdY-Z, or XdY_T (for White Wolf-esque threshold dice)",
+                "required"      : True,
+                "type"          : 3
+        },
+        {
+                "name"          : "name",
+                "description"   : "Who rolled the dice? Can be used to fill a character or NPC name",
+                "required"      : False,
+                "type"          : 3
+        }
+]
 
-while True:
-        try:
-                client.loop.run_until_complete(client.start(TOKEN))
-                
-        except KeyboardInterrupt:
-                client.loop.run_until_complete(client.logout())
-                # cancel all tasks lingering
-                raise
-                #exit
-        except BaseException:
-                print('Retrying in 30 seconds...')
-                time.sleep(30)
+@slash.slash(name="roll", description = "roll some dice, be careful of sirens though, they're allergic.", options = options)
+async def roll(ctx: SlashContext, dice : str, name = None):
+        roll = dice.replace(' ','')
+        totalRolled = []
+        succRolled  = 0
+        validRoll =   bool(re.match('^([\+\-]?[0-9]+([dD][0-9]+(\_[0-9]+)?)?([\+\-][0-9]+([dD][0-9]+(\_[0-9]+)?)?)*)$', roll))
+        x = roll.replace("+",' +').replace('-',' -').replace('D','d').split()
+        if validRoll:
+                for k in x:
+                        k.strip()
+                        if('_' in k):
+                                sub = k.split("d")
+                                thresh = int(sub[-1].split('_')[-1])
+                                for _ in range(int(sub[0].strip())):
+                                        numRoll = random.randint(1, int(sub[-1].split('_')[0].strip()))
+                                        totalRolled.append(numRoll)
+                                        succRolled = succRolled if (numRoll-thresh) < 0 else succRolled + 1
+                        elif('d' in k):
+                                sub = k.split("d")
+                                sign = 1
+                                if int(sub[0].strip()) < 0 : sign = -1
+                                for _ in range(sign*int(sub[0].strip())):
+                                        totalRolled.append(sign * random.randint(1, int(sub[-1].strip())))
+                        else:
+                                totalRolled.append(int(k.strip()))
+                await ctx.send("{} rolled <{}> and got: {!s}{!s} {!s}".format(
+                        name if name else ctx.author.mention, roll, sum(totalRolled), ' <{!s} successes>'.format(succRolled) if succRolled else '', totalRolled))
+        else: 
+                await ctx.send('Bad Formatting', hidden=True)
+
+
+if __name__ == '__main__':
+	client.run(TOKEN)
+
+#while True:
+#        try:
+#                client.loop.run_until_complete(client.start(TOKEN))
+#                
+#        except KeyboardInterrupt:
+#                client.loop.run_until_complete(client.logout())
+#                # cancel all tasks lingering
+#                raise
+#                #exit
+#        except BaseException:
+#                print('Retrying in 30 seconds...')
+#                time.sleep(30)
