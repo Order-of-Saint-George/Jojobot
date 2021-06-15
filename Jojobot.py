@@ -192,6 +192,7 @@ async def roll(ctx: SlashContext, dice : str, name = None):
         roll = dice.replace(' ','')
         totalRolled = []
         succRolled  = 0
+        sumTotal    = 0
         validRoll =   bool(re.match('^([\+\-]?[0-9]+([dD][0-9]+(\_[0-9]+)?)?([\+\-][0-9]+([dD][0-9]+(\_[0-9]+)?)?)*)$', roll))
         x = roll.replace("+",' +').replace('-',' -').replace('D','d').split()
         if validRoll:
@@ -209,11 +210,14 @@ async def roll(ctx: SlashContext, dice : str, name = None):
                                 sign = 1
                                 if int(sub[0].strip()) < 0 : sign = -1
                                 for _ in range(sign*int(sub[0].strip())):
-                                        totalRolled.append(sign * random.randint(1, int(sub[-1].strip())))
+                                        numRoll = sign * random.randint(1, int(sub[-1].strip()))
+                                        totalRolled.append(numRoll)
+                                        sumTotal += numRoll
+
                         else:
                                 totalRolled.append(int(k.strip()))
                 await ctx.send("{} rolled <{}> and got: {!s}{!s} {!s}".format(
-                        name if name else ctx.author.mention, roll, sum(totalRolled), ' <{!s} successes>'.format(succRolled) if succRolled else '', totalRolled))
+                        name if name else ctx.author.mention, roll.replace('_',' with a threshold of ').replace('+',' + ').replace('-',' - '), sumTotal if sumTotal else '', ' <{!s} successes>'.format(succRolled) if '_' in roll else '', totalRolled))
         else: 
                 await ctx.send('Bad Formatting', hidden=True)
 
