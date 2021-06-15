@@ -216,6 +216,8 @@ async def roll(ctx: SlashContext, dice : str, name = None):
 
                         else:
                                 totalRolled.append(int(k.strip()))
+                                sumTotal += int(k.strip())
+                                
                 await ctx.send("{} rolled <{}> and got: {!s}{!s} {!s}".format(
                         name if name else ctx.author.mention, roll.replace('_',' with a threshold of ').replace('+',' + ').replace('-',' - '), sumTotal if sumTotal else '', ' <{!s} successes>'.format(succRolled) if '_' in roll else '', totalRolled))
         else: 
