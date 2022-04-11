@@ -156,7 +156,7 @@ async def on_message(message):
         await message.channel.send(msg)
         return
 
-    if (str.lower(message.content).find("media.discordapp.net") != -1):
+    if (str.lower(message.content).find("media.discordapp.net") != -1 and message.content.endswith('mp4')):
         await message.reply(message.author.mention + " " + message.content.replace("media.discordapp.net", "cdn.discordapp.com"))
 
     print('message from channel {0} had no action.'.format(message.channel.id))
